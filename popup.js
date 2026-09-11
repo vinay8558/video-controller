@@ -19,9 +19,17 @@ document.getElementById('enabledToggle').addEventListener('change', (e) => {
   sendToTab({ type: 'SET_ENABLED', value: e.target.checked });
 });
 
+function bumpLabel(v) {
+  const label = document.getElementById('speedLabel');
+  label.textContent = v.toFixed(2) + 'x';
+  label.classList.remove('bump');
+  void label.offsetWidth;
+  label.classList.add('bump');
+}
+
 document.getElementById('speedSlider').addEventListener('input', (e) => {
   const v = parseFloat(e.target.value);
-  document.getElementById('speedLabel').textContent = v.toFixed(2) + 'x';
+  bumpLabel(v);
   chrome.storage.sync.set({ speed: v });
   sendToTab({ type: 'SET_SPEED', value: v });
 });
@@ -30,7 +38,7 @@ document.querySelectorAll('.presets button').forEach((btn) => {
   btn.addEventListener('click', () => {
     const v = parseFloat(btn.dataset.speed);
     document.getElementById('speedSlider').value = v;
-    document.getElementById('speedLabel').textContent = v.toFixed(2) + 'x';
+    bumpLabel(v);
     chrome.storage.sync.set({ speed: v });
     sendToTab({ type: 'SET_SPEED', value: v });
   });
