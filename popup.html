@@ -3,35 +3,126 @@
 <head>
 <meta charset="utf-8" />
 <style>
-  body { width: 220px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 12px; }
-  h3 { margin: 0 0 10px; font-size: 14px; }
-  .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  input[type="range"] { width: 100%; }
-  .presets { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
-  button { cursor: pointer; border: 1px solid #ccc; background: #f5f5f5; border-radius: 4px; padding: 4px 8px; font-size: 12px; }
-  #speedLabel { font-weight: 600; }
-  .hint { font-size: 11px; color: #666; margin-top: 10px; }
+  :root {
+    --grad: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    width: 260px;
+    margin: 0;
+    padding: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: radial-gradient(circle at 20% 0%, #241b3d 0%, #14101f 60%, #0d0a14 100%);
+    color: #f1f0f5;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .logo {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--grad);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; box-shadow: 0 4px 14px rgba(139,92,246,0.45);
+  }
+  h3 {
+    margin: 0; font-size: 14px; font-weight: 700;
+    background: linear-gradient(90deg, #ffffff, #c9c2ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .row:last-child { margin-bottom: 0; }
+  .label { font-size: 12px; color: #b9b3cf; }
+
+  .switch { position: relative; width: 38px; height: 22px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider-toggle {
+    position: absolute; inset: 0; cursor: pointer;
+    background: rgba(255,255,255,0.12);
+    border-radius: 999px; transition: background 0.25s ease;
+  }
+  .slider-toggle::before {
+    content: ""; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .switch input:checked + .slider-toggle { background: var(--grad); }
+  .switch input:checked + .slider-toggle::before { transform: translateX(16px); }
+
+  #speedLabel {
+    font-weight: 700; font-size: 15px;
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+    transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #speedLabel.bump { transform: scale(1.2); }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px; border-radius: 999px;
+    background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+    margin: 6px 0 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 3px rgba(139,92,246,0.4);
+    cursor: pointer; transition: transform 0.12s ease;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .presets button {
+    flex: 1 1 auto; cursor: pointer; border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.05); color: #f1f0f5;
+    border-radius: 8px; padding: 6px 0; font-size: 12px; font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  .presets button:hover {
+    background: var(--grad); border-color: transparent; transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139,92,246,0.35);
+  }
+  .presets button:active { transform: translateY(0); }
+
+  .hint { font-size: 10.5px; color: #83809a; margin: 14px 2px 0; line-height: 1.5; }
 </style>
 </head>
 <body>
-  <h3>Video Speed Controller</h3>
-  <div class="row">
-    <span>Enabled</span>
-    <input type="checkbox" id="enabledToggle" />
+  <div class="header">
+    <div class="logo">⚡</div>
+    <h3>Speed Controller</h3>
   </div>
-  <div class="row">
-    <span>Speed</span>
-    <span id="speedLabel">1.00x</span>
+
+  <div class="card">
+    <div class="row">
+      <span class="label">Enabled</span>
+      <label class="switch">
+        <input type="checkbox" id="enabledToggle" />
+        <span class="slider-toggle"></span>
+      </label>
+    </div>
+    <div class="row">
+      <span class="label">Playback speed</span>
+      <span id="speedLabel">1.00x</span>
+    </div>
+    <input type="range" id="speedSlider" min="0.1" max="4" step="0.1" value="1" />
+    <div class="presets">
+      <button data-speed="0.5">0.5x</button>
+      <button data-speed="1">1x</button>
+      <button data-speed="1.5">1.5x</button>
+      <button data-speed="2">2x</button>
+      <button data-speed="3">3x</button>
+    </div>
   </div>
-  <input type="range" id="speedSlider" min="0.1" max="4" step="0.1" value="1" />
-  <div class="presets">
-    <button data-speed="0.5">0.5x</button>
-    <button data-speed="1">1x</button>
-    <button data-speed="1.5">1.5x</button>
-    <button data-speed="2">2x</button>
-    <button data-speed="3">3x</button>
-  </div>
-  <p class="hint">On-page shortcuts: Alt+D faster, Alt+S slower, Alt+R reset. Drag the floating badge on the video to reposition it.</p>
+
+  <p class="hint">Shortcuts on page: <b>Alt+D</b> faster · <b>Alt+S</b> slower · <b>Alt+R</b> reset.<br />Drag the floating badge to reposition it.</p>
   <script src="popup.js"></script>
 </body>
 </html>
