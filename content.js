@@ -32,7 +32,6 @@
     document.querySelectorAll('.vsc-badge').forEach((b) => b.classList.toggle('vsc-off', !settings.enabled));
   }
 
-  // Walk light DOM + open shadow roots (covers most custom players)
   function findAllVideos(root = document, out = []) {
     root.querySelectorAll('video').forEach((v) => out.push(v));
     root.querySelectorAll('*').forEach((el) => {
@@ -53,23 +52,16 @@
     findAllVideos().forEach(applyToVideo);
   }
 
-  // Some players (Netflix in particular) reset playbackRate on internal
-  // events. Re-assert our chosen rate whenever the browser reports a change.
-  document.addEventListener(
-    'ratechange',
-    (e) => {
-      const v = e.target;
-      if (v.tagName === 'VIDEO' && settings.enabled && Math.abs(v.playbackRate - settings.speed) > 0.001) {
-        v.playbackRate = settings.speed;
-      }
-    },
-    true
-  );
+  document.addEventListener('ratechange', (e) => {
+    const v = e.target;
+    if (v.tagName === 'VIDEO' && settings.enabled && Math.abs(v.playbackRate - settings.speed) > 0.001) {
+      v.playbackRate = settings.speed;
+    }
+  }, true);
 
   document.addEventListener('play', (e) => { if (e.target.tagName === 'VIDEO') applyToVideo(e.target); }, true);
   document.addEventListener('loadedmetadata', (e) => { if (e.target.tagName === 'VIDEO') applyToVideo(e.target); }, true);
 
-  // Catch videos injected after page load (YouTube/Netflix/Prime all do this)
   const observer = new MutationObserver((mutations) => {
     for (const m of mutations) {
       m.addedNodes.forEach((node) => {
@@ -81,10 +73,8 @@
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
-  // Safety net for players that swap sources without firing the above events
   setInterval(applyAll, 1500);
 
-  // --- floating overlay badge ---
   function attachBadge(video) {
     if (badges.has(video)) { positionBadge(video); return; }
     const badge = document.createElement('div');
@@ -114,7 +104,7 @@
 
   function positionBadge(video) {
     const badge = badges.get(video);
-    if (!badge || badge.dataset.dragged) return; // respect manual placement
+    if (!badge || badge.dataset.dragged) return;
     const rect = video.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) { badge.style.display = 'none'; return; }
     badge.style.display = 'flex';
@@ -125,8 +115,12 @@
   function updateBadgeText(video) {
     const badge = badges.get(video);
     if (!badge) return;
-    badge.querySelector('.vsc-speed').textContent = settings.speed.toFixed(2) + 'x';
+    const speedEl = badge.querySelector('.vsc-speed');
+    speedEl.textContent = settings.speed.toFixed(2) + 'x';
     badge.classList.toggle('vsc-off', !settings.enabled);
+    speedEl.classList.remove('vsc-bump');
+    void speedEl.offsetWidth;
+    speedEl.classList.add('vsc-bump');
   }
 
   function makeDraggable(el) {
@@ -148,21 +142,15 @@
     window.addEventListener('mouseup', () => { dragging = false; });
   }
 
-  // --- keyboard shortcuts (ignored while typing) ---
-  document.addEventListener(
-    'keydown',
-    (e) => {
-      const tag = (e.target.tagName || '').toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
-      if (!settings.enabled) return;
-      if (e.altKey && e.code === 'KeyD') setSpeed(settings.speed + 0.1);
-      if (e.altKey && e.code === 'KeyS') setSpeed(settings.speed - 0.1);
-      if (e.altKey && e.code === 'KeyR') setSpeed(1.0);
-    },
-    true
-  );
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+    if (!settings.enabled) return;
+    if (e.altKey && e.code === 'KeyD') setSpeed(settings.speed + 0.1);
+    if (e.altKey && e.code === 'KeyS') setSpeed(settings.speed - 0.1);
+    if (e.altKey && e.code === 'KeyR') setSpeed(1.0);
+  }, true);
 
-  // messages from the popup
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'GET_STATE') sendResponse({ ...settings });
     if (msg.type === 'SET_SPEED') setSpeed(msg.value);
